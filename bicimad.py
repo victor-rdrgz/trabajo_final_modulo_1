@@ -26,14 +26,15 @@ def get_links(html):
 
     Ejemplos:
     >>> html_example = '''
-    ... <a href="/getattachment/7a88cb04-9007-4520-88c5-a94c71a0b925/trips_22_02_February-csv.aspx">Download</a>
-    ... <a href="/getattachment/7a88cb04-9007-4520-88c5-a94c71a0b925/trips_23_02_February-csv.aspx">Download</a>
-    ... <a href="/getattachment/7a88cb04-9007-4520-88c5-a94c71a0b925/trips_23_01_February-csv.aspx">Download</a>
+    ... <a href="/geta...71a0b925/trips_22_02_February-csv.aspx">Download</a>
+    ... <a href="/geta...j8h0b925/trips_23_02_February-csv.aspx">Download</a>
+    ... <a href="/geta...c71a0b925/trips_23_01_February-csv.aspx">Download</a>
     ... '''
     >>> get_links(html_example)
-    {'/getattachment/1234/trip-data-csv.aspx', '/getattachment/5678/trip-data-csv.aspx'}
+    {'/getattachment/1234/trip-data-csv.aspx',
+    '/getattachment/5678/trip-data-csv.aspx'}
 
-    >>> html_example_empty = '<html><head></head><body>No links here</body></html>'
+    >>> html_example_empty = '<html><body>No links here</body></html>'
     >>> get_links(html_example_empty)
     set()
 
@@ -79,7 +80,8 @@ class UrlEMT():
             for link in links:
                 splitted_url = link.split('_')
                 
-                # Se asume que el formato del enlace es '/getattachment/{id}/{mes}/{nombre}'
+                # Se asume que el formato del enlace es 
+                # '/getattachment/{id}/{mes}/{nombre}'
                 if len(splitted_url) >= 3:
                     UrlEMT.__enlaces[
                         int(splitted_url[1]), int(splitted_url[2])] = link
@@ -90,7 +92,8 @@ class UrlEMT():
            
     def get_url(self, year: int, month: int) -> str:
         """
-        Devuelve el string de la URL correspondiente al mes y año proporcionados.
+        Devuelve el string de la URL correspondiente 
+        al mes y año proporcionados.
         
         Parámetros:
         - year (str): Año en formato de cadena (se espera '21', '22' o '23').
@@ -128,7 +131,8 @@ class UrlEMT():
         url = EMT + self.get_url(year, month)
         try:
             r = requests.get(url)
-            r.raise_for_status()  # Levanta una excepción si el código HTTP no es 200
+            # Levanta una excepción si el código HTTP no es 200
+            r.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise ConnectionError(f"Error al descargar el archivo ZIP: {e}")
         try:
@@ -137,11 +141,14 @@ class UrlEMT():
                 # Listar los archivos en el ZIP
                 nombres_archivos = z.namelist()
                 if not nombres_archivos:
-                    raise FileNotFoundError("No se encontró ningún archivo en el ZIP")
-                # Extraer el CSV (suponiendo que es el primer archivo en la lista)
+                    raise FileNotFoundError(
+                        "No se encontró ningún archivo en el ZIP")
+                # Extraer el CSV
                 with z.open(nombres_archivos[0]) as csv_file:
                     # Leer el contenido del CSV en un objeto TextIO
-                    contenido_csv = io.StringIO(csv_file.read().decode('utf-8'))  # Convierte a string y crea un TextIO
+                    contenido_csv = io.StringIO(
+                        csv_file.read().decode('utf-8'))  
+                    # Convierte a string y crea un TextIO
         except zipfile.BadZipFile as e:
             print(f"El archivo descargado no es un ZIP válido: {e}") 
         return contenido_csv  # Devuelve el objeto TextIO
@@ -182,7 +189,8 @@ class BiciMad():
 
         Excepciones:
         - ValueError: Si el mes o año no son válidos.
-        - KeyError: Si alguna de las columnas especificadas no existe en el DataFrame.
+        - KeyError: Si alguna de las columnas especificadas
+                    no existe en el DataFrame.
         '''
         # Comprobación de rango válido para año y mes
         if month not in range(1, 13):
@@ -212,8 +220,10 @@ class BiciMad():
         try:
             return df[columns_to_preserve]
         except KeyError as e:
-            missing_columns = [col for col in columns_to_preserve if col not in df.columns]
-            raise KeyError(f"Faltan las siguientes columnas en el DataFrame: {', '.join(missing_columns)}") from e
+            missing_columns = [
+                col for col in columns_to_preserve if col not in df.columns]
+            raise KeyError(f"Faltan las siguientes columnas en el DataFrame:
+                           {', '.join(missing_columns)}") from e
     
     @property
     def data(self):
@@ -240,7 +250,8 @@ class BiciMad():
         # Eliminar filas donde todos los elementos son NaN
         self.__data.dropna(how='all', inplace=True)
         # Convertir columnas a tipo string
-        columns_to_convert = ['idBike', 'fleet', 'station_unlock', 'station_lock']
+        columns_to_convert = [
+            'idBike', 'fleet', 'station_unlock', 'station_lock']
         self.__data[columns_to_convert] = self.__data[
             columns_to_convert].astype(str)
         
